@@ -1,0 +1,133 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  /* Brand orange ramp */
+  --color-brand-50: #fff4ec;
+  --color-brand-100: #ffe4cf;
+  --color-brand-200: #ffc79c;
+  --color-brand-300: #ffa25f;
+  --color-brand-400: #fd7f2e;
+  --color-brand-500: #f2660d;
+  --color-brand-600: #d95926;
+  --color-brand-700: #b3430f;
+  --color-brand-800: #8f350f;
+  --color-brand-900: #742d10;
+
+  /* Neutral grays (warm-tinted to sit well beside orange) */
+  --color-ink-50: #f9f9f7;
+  --color-ink-100: #f1f0ec;
+  --color-ink-200: #e1e0d9;
+  --color-ink-300: #c3c2b7;
+  --color-ink-400: #a5a399;
+  --color-ink-500: #898781;
+  --color-ink-600: #6b6a63;
+  --color-ink-700: #52514e;
+  --color-ink-800: #33322f;
+  --color-ink-900: #1a1a19;
+}
+
+:root {
+  color-scheme: light;
+  --surface-page: #f9f9f7;
+  --surface-card: #fefefd;
+  --surface-card-alt: #fff8f2;
+  --text-primary: #14120f;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --border-hairline: rgba(11, 11, 11, 0.1);
+  --gridline: #e1e0d9;
+
+  /* Categorical chart palette — orange-led, CVD-validated ordering */
+  --series-1: #eb6834;
+  --series-2: #2a78d6;
+  --series-3: #1baf7a;
+  --series-4: #eda100;
+  --series-5: #4a3aa7;
+  --series-6: #e87ba4;
+  --series-7: #008300;
+  --series-8: #e34948;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --surface-page: #100f0d;
+    --surface-card: #1a1a19;
+    --surface-card-alt: #221c16;
+    --text-primary: #fbfaf8;
+    --text-secondary: #c3c2b7;
+    --text-muted: #948f87;
+    --border-hairline: rgba(255, 255, 255, 0.1);
+    --gridline: #2c2c2a;
+
+    --series-1: #d95926;
+    --series-2: #3987e5;
+    --series-3: #199e70;
+    --series-4: #c98500;
+    --series-5: #9085e9;
+    --series-6: #d55181;
+    --series-7: #008300;
+    --series-8: #e66767;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-page: #100f0d;
+  --surface-card: #1a1a19;
+  --surface-card-alt: #221c16;
+  --text-primary: #fbfaf8;
+  --text-secondary: #c3c2b7;
+  --text-muted: #948f87;
+  --border-hairline: rgba(255, 255, 255, 0.1);
+  --gridline: #2c2c2a;
+
+  --series-1: #d95926;
+  --series-2: #3987e5;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --series-5: #9085e9;
+  --series-6: #d55181;
+  --series-7: #008300;
+  --series-8: #e66767;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-page);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-ink-300);
+  border-radius: 999px;
+}
