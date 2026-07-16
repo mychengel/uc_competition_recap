@@ -2,9 +2,9 @@ import { motion } from 'framer-motion';
 
 const TONE_STYLES = {
   good: { bg: 'bg-[var(--status-good)]/10', text: 'text-[var(--status-good)]', icon: '↑' },
-  warning: { bg: 'bg-[var(--status-warning)]/15', text: 'text-[#946200]', icon: '!' },
+  warning: { bg: 'bg-[var(--status-warning)]/15', text: 'text-[var(--warning-text)]', icon: '!' },
   critical: { bg: 'bg-[var(--status-critical)]/10', text: 'text-[var(--status-critical)]', icon: '↓' },
-  default: { bg: 'bg-brand-50', text: 'text-brand-600', icon: '•' },
+  default: { bg: 'bg-[var(--accent-soft-bg)]', text: 'text-[var(--accent-text)]', icon: '•' },
 };
 
 export default function InsightsPanel({ insights }) {

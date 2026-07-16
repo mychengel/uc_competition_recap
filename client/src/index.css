@@ -53,6 +53,14 @@
   --status-warning: #fab219;
   --status-serious: #ec835a;
   --status-critical: #d03b3b;
+
+  /* Theme-aware accent roles (kept separate from the static brand-* /
+     ink-* Tailwind scale, which solid CTA buttons rely on staying vivid
+     in both themes) */
+  --accent-soft-bg: #fff4ec;
+  --accent-soft-bg-hover: #ffe4cf;
+  --accent-text: #b3430f;
+  --warning-text: #946200;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -75,6 +83,22 @@
     --series-6: #d55181;
     --series-7: #008300;
     --series-8: #e66767;
+
+    --accent-soft-bg: #2e1d10;
+    --accent-soft-bg-hover: #3d2814;
+    --accent-text: #ffa25f;
+    --warning-text: #f2b73d;
+
+    /* ink-800/900 stay pinned dark in both themes — several components pair
+       them with hardcoded white text as an "always-dark chip" accent */
+    --color-ink-50: #201f1d;
+    --color-ink-100: #292825;
+    --color-ink-200: #363530;
+    --color-ink-300: #4a4944;
+    --color-ink-400: #6b6a63;
+    --color-ink-500: #898781;
+    --color-ink-600: #a5a399;
+    --color-ink-700: #c3c2b7;
   }
 }
 
@@ -97,6 +121,20 @@
   --series-6: #d55181;
   --series-7: #008300;
   --series-8: #e66767;
+
+  --accent-soft-bg: #2e1d10;
+  --accent-soft-bg-hover: #3d2814;
+  --accent-text: #ffa25f;
+  --warning-text: #f2b73d;
+
+  --color-ink-50: #201f1d;
+  --color-ink-100: #292825;
+  --color-ink-200: #363530;
+  --color-ink-300: #4a4944;
+  --color-ink-400: #6b6a63;
+  --color-ink-500: #898781;
+  --color-ink-600: #a5a399;
+  --color-ink-700: #c3c2b7;
 }
 
 * {

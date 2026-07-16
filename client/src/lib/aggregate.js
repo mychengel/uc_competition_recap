@@ -145,15 +145,6 @@ function countBy(list, keyFn) {
   return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
 }
 
-function sumBy(list, keyFn, valueFn) {
-  const map = new Map();
-  for (const item of list) {
-    const key = keyFn(item);
-    map.set(key, (map.get(key) || 0) + valueFn(item));
-  }
-  return Array.from(map.entries()).map(([name, value]) => ({ name, value }));
-}
-
 /** Count each achievement once per distinct value of a multi-value dimension
  *  (e.g. an achievement with a mixed-major team counts once for each major). */
 function countByMultiDimension(achievements, dimensionKey) {
@@ -166,6 +157,40 @@ function countByMultiDimension(achievements, dimensionKey) {
   return Array.from(map.entries())
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
+}
+
+/** Per-year breakdown of a multi-value dimension (major/faculty), e.g. for
+ *  { name: 'IBM', 'TA-1': 40, TA: 92, total: 132 } style year-comparison
+ *  charts. Only years actually present for that name get a key, so a chart
+ *  reading the row's own keys naturally reflects the years available. */
+function buildDimensionYearBreakdown(achievements, dimensionKey, valueFn, topN = 12) {
+  const byNameYear = new Map(); // name -> { year -> sum }
+  const totals = new Map(); // name -> total
+
+  for (const a of achievements) {
+    const v = valueFn(a);
+    for (const name of a[dimensionKey]) {
+      if (!byNameYear.has(name)) byNameYear.set(name, {});
+      const yearMap = byNameYear.get(name);
+      yearMap[a.year] = (yearMap[a.year] || 0) + v;
+      totals.set(name, (totals.get(name) || 0) + v);
+    }
+  }
+
+  const names = Array.from(totals.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+    .map(([name]) => name);
+
+  return names.map((name) => {
+    const yearMap = byNameYear.get(name) || {};
+    const row = { name };
+    for (const year of YEAR_ORDER) {
+      if (yearMap[year] !== undefined) row[year] = yearMap[year];
+    }
+    row.total = totals.get(name) || 0;
+    return row;
+  });
 }
 
 export function computeMetrics(filteredRows) {
@@ -206,6 +231,9 @@ export function computeMetrics(filteredRows) {
 
   const byMajor = countByMultiDimension(achievements, 'majors');
   const byFaculty = countByMultiDimension(achievements, 'faculties');
+  const byMajorYear = buildDimensionYearBreakdown(achievements, 'majors', () => 1);
+  const byFacultyYear = buildDimensionYearBreakdown(achievements, 'faculties', () => 1);
+  const creditByMajorYear = buildDimensionYearBreakdown(achievements, 'majors', (a) => a.creditPoint);
   const byStatus = countBy(achievements, (a) => a.status).sort((a, b) => b.value - a.value);
   const byCategory = countBy(achievements, (a) => a.category).sort((a, b) => b.value - a.value);
   const byBentuk = countBy(achievements, (a) => a.bentuk).sort((a, b) => b.value - a.value);
@@ -217,12 +245,6 @@ export function computeMetrics(filteredRows) {
   const byOrganizer = countBy(achievements, (a) => a.competitionOrganizer)
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
-
-  const creditByMajor = sumBy(
-    achievements.flatMap((a) => a.majors.map((m) => ({ m, creditPoint: a.creditPoint }))),
-    (x) => x.m,
-    (x) => x.creditPoint
-  ).sort((a, b) => b.value - a.value);
 
   return {
     achievements,
@@ -238,6 +260,9 @@ export function computeMetrics(filteredRows) {
     byYearScope,
     byMajor,
     byFaculty,
+    byMajorYear,
+    byFacultyYear,
+    creditByMajorYear,
     byStatus,
     byCategory,
     byBentuk,
@@ -247,7 +272,6 @@ export function computeMetrics(filteredRows) {
     byCabang,
     byKategoriSimkatmawa,
     byOrganizer,
-    creditByMajor,
   };
 }
 

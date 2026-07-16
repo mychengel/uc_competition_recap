@@ -1,4 +1,5 @@
 import { NavLink, useNavigate } from 'react-router-dom';
+import ThemeToggle from './ThemeToggle.jsx';
 
 const linkBase =
   'inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors';
@@ -44,7 +45,7 @@ export default function NavBar() {
               `${linkBase} ${
                 isActive
                   ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/30'
-                  : 'bg-brand-50 text-brand-700 hover:bg-brand-100'
+                  : 'bg-[var(--accent-soft-bg)] text-[var(--accent-text)] hover:bg-[var(--accent-soft-bg-hover)]'
               }`
             }
           >
@@ -76,6 +77,7 @@ export default function NavBar() {
             <span className="hidden sm:inline">Histori Report</span>
             <span className="sm:hidden">Histori</span>
           </NavLink>
+          <ThemeToggle />
         </nav>
       </div>
     </header>

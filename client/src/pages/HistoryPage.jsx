@@ -75,7 +75,7 @@ export default function HistoryPage() {
             className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--border-hairline)] bg-[var(--surface-card)] p-5 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lg hover:shadow-brand-500/10"
           >
             <div className="flex min-w-0 items-center gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft-bg)] text-[var(--accent-text)]">
                 <svg viewBox="0 0 20 20" fill="none" className="h-5 w-5">
                   <path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h9A1.5 1.5 0 0 1 16 5.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 4 14.5v-9Z" stroke="currentColor" strokeWidth="1.5" />
                   <path d="M7 8h6M7 11h6M7 14h3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />

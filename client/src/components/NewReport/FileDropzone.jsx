@@ -19,7 +19,7 @@ export default function FileDropzone({ label, sublabel, file, onChange }) {
     <div>
       <div className="mb-1.5 flex items-baseline justify-between">
         <label className="text-sm font-semibold text-[var(--text-primary)]">{label}</label>
-        {sublabel && <span className="text-xs font-medium text-brand-600">{sublabel}</span>}
+        {sublabel && <span className="text-xs font-medium text-[var(--accent-text)]">{sublabel}</span>}
       </div>
       <div
         onClick={() => inputRef.current?.click()}
@@ -35,9 +35,9 @@ export default function FileDropzone({ label, sublabel, file, onChange }) {
         }}
         className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed px-4 py-3.5 transition-colors ${
           dragOver
-            ? 'border-brand-400 bg-brand-50'
+            ? 'border-brand-400 bg-[var(--accent-soft-bg)]'
             : file
-              ? 'border-brand-300 bg-brand-50/60'
+              ? 'border-brand-300 bg-[var(--accent-soft-bg)]/60'
               : 'border-[var(--gridline)] bg-[var(--surface-card-alt)] hover:border-brand-300'
         }`}
       >
