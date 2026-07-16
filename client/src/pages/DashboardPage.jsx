@@ -20,6 +20,7 @@ import CategoryPie from '../components/Dashboard/charts/CategoryPie.jsx';
 import TrendLineChart from '../components/Dashboard/charts/TrendLineChart.jsx';
 import CreditBarChart from '../components/Dashboard/charts/CreditBarChart.jsx';
 import StackedYearBarChart from '../components/Dashboard/charts/StackedYearBarChart.jsx';
+import DimensionYearStackedBarChart from '../components/Dashboard/charts/DimensionYearStackedBarChart.jsx';
 
 function formatDate(iso) {
   try {
@@ -88,7 +89,7 @@ export default function DashboardPage() {
     <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-8 sm:px-6">
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide text-brand-600">
+          <p className="text-xs font-bold uppercase tracking-wide text-[var(--accent-text)]">
             {SCOPE_DEFS[report.scopeType]?.label ?? report.scopeType}
           </p>
           <h1 className="mt-0.5 text-2xl font-extrabold text-[var(--text-primary)] sm:text-3xl">{report.title}</h1>
@@ -144,11 +145,17 @@ export default function DashboardPage() {
       </div>
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <ChartCard title="Prestasi per Program Studi" subtitle="Diurutkan dari yang terbanyak" delay={0.05}>
-          <RankedBarChart data={metrics.byMajor} />
+        <ChartCard title="Prestasi per Program Studi" subtitle="Diurutkan dari yang terbanyak, dikomparasi per tahun ajaran" delay={0.05}>
+          <DimensionYearStackedBarChart data={metrics.byMajorYear} />
         </ChartCard>
-        <ChartCard title="Prestasi per Fakultas" subtitle="Diurutkan dari yang terbanyak" delay={0.1}>
-          <RankedBarChart data={metrics.byFaculty} color="#d95926" />
+        <ChartCard title="Prestasi per Fakultas" subtitle="Diurutkan dari yang terbanyak, dikomparasi per tahun ajaran" delay={0.1}>
+          <DimensionYearStackedBarChart data={metrics.byFacultyYear} />
+        </ChartCard>
+      </div>
+
+      <div className="mt-5">
+        <ChartCard title="Credit Point per Program Studi" subtitle="Akumulasi credit point per prodi, dikomparasi per tahun ajaran" delay={0.05}>
+          <DimensionYearStackedBarChart data={metrics.creditByMajorYear} height={360} />
         </ChartCard>
       </div>
 

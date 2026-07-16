@@ -23,7 +23,7 @@ export default function ScopeCards({ value, onChange }) {
             onClick={() => onChange(key)}
             className={`flex flex-col gap-3 rounded-2xl border-2 p-5 text-left transition-all ${
               active
-                ? 'border-brand-500 bg-brand-50 shadow-md shadow-brand-500/15'
+                ? 'border-brand-500 bg-[var(--accent-soft-bg)] shadow-md shadow-brand-500/15'
                 : 'border-[var(--border-hairline)] bg-[var(--surface-card)] hover:border-brand-300 hover:-translate-y-0.5'
             }`}
           >

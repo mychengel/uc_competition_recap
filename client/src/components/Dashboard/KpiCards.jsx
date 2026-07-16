@@ -27,7 +27,7 @@ function Tile({ icon, label, value, sub, delta, index }) {
       className="flex flex-col gap-2 rounded-2xl border border-[var(--border-hairline)] bg-[var(--surface-card)] p-5 shadow-sm"
     >
       <div className="flex items-center justify-between">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--accent-soft-bg)] text-[var(--accent-text)]">
           {icon}
         </span>
         {delta}

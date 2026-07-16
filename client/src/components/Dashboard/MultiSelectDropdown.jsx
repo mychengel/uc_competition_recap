@@ -28,7 +28,7 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
         onClick={() => setOpen((o) => !o)}
         className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-colors ${
           active
-            ? 'border-brand-400 bg-brand-50 text-brand-700'
+            ? 'border-brand-400 bg-[var(--accent-soft-bg)] text-[var(--accent-text)]'
             : 'border-[var(--gridline)] bg-[var(--surface-card)] text-[var(--text-secondary)] hover:border-brand-300'
         }`}
       >
@@ -56,7 +56,7 @@ export default function MultiSelectDropdown({ label, options, selected, onChange
               <button
                 type="button"
                 onClick={() => onChange([])}
-                className="mb-1 w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-brand-600 hover:bg-brand-50"
+                className="mb-1 w-full rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-[var(--accent-text)] hover:bg-[var(--accent-soft-bg)]"
               >
                 Bersihkan pilihan
               </button>

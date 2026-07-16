@@ -12,6 +12,20 @@ export const SERIES = [
   '#e34948', // red
 ];
 
+// Ordinal orange ramp for TA-3 -> TA (oldest -> most recent), used wherever
+// academic years are compared as segments of the same bar. Validated with
+// scripts/validate_palette.js --ordinal against both light and dark surfaces.
+export const YEAR_SEQUENTIAL = {
+  'TA-3': '#e0954f',
+  'TA-2': '#d17a2e',
+  'TA-1': '#b35a12',
+  TA: '#7c3a0c',
+};
+
+export function yearColor(yearLabel) {
+  return YEAR_SEQUENTIAL[yearLabel] || INK.muted;
+}
+
 export const STATUS = {
   good: '#0ca30c',
   warning: '#fab219',
