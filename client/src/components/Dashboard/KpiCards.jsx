@@ -42,13 +42,22 @@ function Tile({ icon, label, value, sub, delta, index }) {
 }
 
 export default function KpiCards({ metrics }) {
-  const { totalPrestasi, totalCreditPoints, totalMahasiswaTerlibat, totalPartisipasi, teamAchievements, byYear } = metrics;
+  const {
+    totalPrestasi,
+    totalCreditPoints,
+    totalMahasiswaTerlibat,
+    totalPartisipasi,
+    teamAchievements,
+    winningAchievements,
+    winRate,
+    byYear,
+  } = metrics;
   const first = byYear[0];
   const last = byYear[byYear.length - 1];
   const hasTrend = byYear.length >= 2;
 
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
       <Tile
         index={0}
         icon={
@@ -90,6 +99,20 @@ export default function KpiCards({ metrics }) {
       />
       <Tile
         index={3}
+        icon={
+          <svg viewBox="0 0 20 20" fill="none" className="h-4.5 w-4.5">
+            <path d="M6 3h8l-1 6.5L10 12l-3-2.5L6 3Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+            <path d="M8.5 14h3M10 12v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M6 4.5H3.5c0 2 1 3.5 2.8 3.9M14 4.5h2.5c0 2-1 3.5-2.8 3.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+          </svg>
+        }
+        label="Win Rate Juara"
+        value={`${winRate.toFixed(0)}%`}
+        sub={`${winningAchievements.toLocaleString('id-ID')} dari ${totalPrestasi.toLocaleString('id-ID')} prestasi`}
+        delta={hasTrend ? <Delta from={first.winRate} to={last.winRate} /> : null}
+      />
+      <Tile
+        index={4}
         icon={
           <svg viewBox="0 0 20 20" fill="none" className="h-4.5 w-4.5">
             <circle cx="6.5" cy="6" r="2.2" stroke="currentColor" strokeWidth="1.5" />

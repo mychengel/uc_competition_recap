@@ -1,6 +1,14 @@
 // Client-side aggregation over raw achievement rows.
 // Core rule: rows sharing the same (year, Proposal No) are ONE achievement —
 // whether it was a team or an individual entry, it is counted once.
+//
+// Field semantics (per the institution's real export):
+//   - Status: the achievement RESULT (Juara 1/2/3, Finalis, Peserta …)
+//   - Category: Akademik / Non Akademik (broad activity type)
+//   - Bentuk: Daring / Luring (delivery mode)
+//   - Participant: Individual / Team (participation form)
+//   - Periode: the semester/year tag recorded in the data itself, which can
+//     differ from which upload slot (TA/TA-1/…) a row came in on
 
 export const YEAR_ORDER = ['TA-3', 'TA-2', 'TA-1', 'TA'];
 
@@ -19,6 +27,10 @@ function orLabel(v) {
 
 export function sortByYearOrder(a, b) {
   return YEAR_ORDER.indexOf(a) - YEAR_ORDER.indexOf(b);
+}
+
+function isWinningStatus(status) {
+  return /juara/i.test(status);
 }
 
 /** Group raw rows into one record per achievement (year + Proposal No). */
@@ -59,15 +71,20 @@ export function groupAchievements(rows) {
       nims: Array.from(new Set(g.rows.map((r) => clean(r.nim)).filter(Boolean))),
       competitionName: orLabel(first.competitionName),
       competitionOrganizer: orLabel(first.competitionOrganizer),
+      periode: orLabel(first.periode),
       scope: orLabel(first.scope),
+      participant: orLabel(first.participant),
+      represent: orLabel(first.represent),
       category: orLabel(first.category),
       bentuk: orLabel(first.bentuk),
       cabang: orLabel(first.cabang),
       kategoriSimkatmawa: orLabel(first.kategoriSimkatmawa),
       status: orLabel(first.status),
+      isWinner: isWinningStatus(orLabel(first.status)),
       startDate: first.startDate,
       endDate: first.endDate,
       competitionLink: first.competitionLink,
+      certificateUrl: first.certificateUrl,
       creditPoint,
     };
   });
@@ -75,12 +92,15 @@ export function groupAchievements(rows) {
 
 const FILTER_FIELDS = [
   { key: 'years', rowField: '_year' },
+  { key: 'periodes', rowField: 'periode' },
   { key: 'faculties', rowField: 'faculty' },
   { key: 'majors', rowField: 'major' },
   { key: 'scopes', rowField: 'scope' },
+  { key: 'statuses', rowField: 'status' },
   { key: 'categories', rowField: 'category' },
   { key: 'bentuks', rowField: 'bentuk' },
-  { key: 'statuses', rowField: 'status' },
+  { key: 'participants', rowField: 'participant' },
+  { key: 'representations', rowField: 'represent' },
   { key: 'cabangs', rowField: 'cabang' },
   { key: 'kategoriSimkatmawas', rowField: 'kategoriSimkatmawa' },
 ];
@@ -156,11 +176,14 @@ export function computeMetrics(filteredRows) {
   const totalMahasiswaTerlibat = new Set(filteredRows.map((r) => clean(r.nim)).filter(Boolean)).size;
   const totalPartisipasi = filteredRows.length;
   const teamAchievements = achievements.filter((a) => a.participantsCount > 1).length;
+  const winningAchievements = achievements.filter((a) => a.isWinner).length;
+  const winRate = totalPrestasi ? (winningAchievements / totalPrestasi) * 100 : 0;
 
   const yearsPresent = Array.from(new Set(achievements.map((a) => a.year))).sort(sortByYearOrder);
 
   const byYear = yearsPresent.map((year) => {
     const yearAchievements = achievements.filter((a) => a.year === year);
+    const winners = yearAchievements.filter((a) => a.isWinner).length;
     return {
       name: year,
       yearRange: yearAchievements[0]?.yearRange || year,
@@ -169,6 +192,7 @@ export function computeMetrics(filteredRows) {
       mahasiswa: new Set(
         filteredRows.filter((r) => r._year === year).map((r) => clean(r.nim)).filter(Boolean)
       ).size,
+      winRate: yearAchievements.length ? (winners / yearAchievements.length) * 100 : 0,
     };
   });
 
@@ -182,10 +206,12 @@ export function computeMetrics(filteredRows) {
 
   const byMajor = countByMultiDimension(achievements, 'majors');
   const byFaculty = countByMultiDimension(achievements, 'faculties');
-  const byCategory = countBy(achievements, (a) => a.category).sort((a, b) => b.value - a.value);
-  const byScope = countBy(achievements, (a) => a.scope).sort((a, b) => b.value - a.value);
   const byStatus = countBy(achievements, (a) => a.status).sort((a, b) => b.value - a.value);
+  const byCategory = countBy(achievements, (a) => a.category).sort((a, b) => b.value - a.value);
   const byBentuk = countBy(achievements, (a) => a.bentuk).sort((a, b) => b.value - a.value);
+  const byParticipant = countBy(achievements, (a) => a.participant).sort((a, b) => b.value - a.value);
+  const byRepresent = countBy(achievements, (a) => a.represent).sort((a, b) => b.value - a.value);
+  const byScope = countBy(achievements, (a) => a.scope).sort((a, b) => b.value - a.value);
   const byCabang = countBy(achievements, (a) => a.cabang).sort((a, b) => b.value - a.value).slice(0, 10);
   const byKategoriSimkatmawa = countBy(achievements, (a) => a.kategoriSimkatmawa).sort((a, b) => b.value - a.value);
   const byOrganizer = countBy(achievements, (a) => a.competitionOrganizer)
@@ -205,15 +231,19 @@ export function computeMetrics(filteredRows) {
     totalMahasiswaTerlibat,
     totalPartisipasi,
     teamAchievements,
+    winningAchievements,
+    winRate,
     yearsPresent,
     byYear,
     byYearScope,
     byMajor,
     byFaculty,
-    byCategory,
-    byScope,
     byStatus,
+    byCategory,
     byBentuk,
+    byParticipant,
+    byRepresent,
+    byScope,
     byCabang,
     byKategoriSimkatmawa,
     byOrganizer,
@@ -228,7 +258,8 @@ function pctChange(from, to) {
 
 export function computeInsights(metrics) {
   const insights = [];
-  const { byYear, byMajor, byFaculty, byScope, byCategory, totalPrestasi } = metrics;
+  const { byYear, byMajor, byFaculty, byScope, byStatus, byCategory, totalPrestasi, winRate, winningAchievements } =
+    metrics;
 
   if (byYear.length >= 2) {
     const first = byYear[0];
@@ -251,6 +282,22 @@ export function computeInsights(metrics) {
           ? `Credit point institusi naik ${cpChange.toFixed(0)}%`
           : `Credit point institusi turun ${Math.abs(cpChange).toFixed(0)}%`,
       detail: `${first.name}: ${first.creditPoints.toFixed(0)} poin → ${last.name}: ${last.creditPoints.toFixed(0)} poin.`,
+    });
+
+    const wrChange = last.winRate - first.winRate;
+    insights.push({
+      tone: wrChange >= 0 ? 'good' : 'warning',
+      title:
+        wrChange >= 0
+          ? `Win rate naik ${wrChange.toFixed(0)} poin persentase`
+          : `Win rate turun ${Math.abs(wrChange).toFixed(0)} poin persentase`,
+      detail: `Proporsi prestasi yang meraih gelar juara: ${first.name} ${first.winRate.toFixed(0)}% → ${last.name} ${last.winRate.toFixed(0)}%.`,
+    });
+  } else if (totalPrestasi > 0) {
+    insights.push({
+      tone: winRate >= 40 ? 'good' : 'default',
+      title: `Win rate juara: ${winRate.toFixed(0)}%`,
+      detail: `${winningAchievements} dari ${totalPrestasi} prestasi berhasil meraih gelar juara.`,
     });
   }
 
@@ -289,12 +336,21 @@ export function computeInsights(metrics) {
     });
   }
 
-  if (byCategory.length > 0) {
+  if (byStatus.length > 0) {
+    const top = byStatus[0];
+    insights.push({
+      tone: 'default',
+      title: `Tingkat pencapaian terbanyak: ${top.name}`,
+      detail: `${top.value} prestasi tercatat dengan hasil ini.`,
+    });
+  }
+
+  if (byCategory.length > 1) {
     const top = byCategory[0];
     insights.push({
       tone: 'default',
-      title: `Kategori pencapaian terbanyak: ${top.name}`,
-      detail: `${top.value} prestasi tercatat dengan kategori ini.`,
+      title: `Tipe kegiatan dominan: ${top.name}`,
+      detail: `${top.value} dari ${totalPrestasi} prestasi bertipe ${top.name}.`,
     });
   }
 

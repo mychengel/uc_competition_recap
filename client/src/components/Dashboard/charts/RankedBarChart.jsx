@@ -3,21 +3,30 @@ import ChartTooltip from '../ChartTooltip.jsx';
 import EmptyChartState from '../EmptyChartState.jsx';
 import { INK } from '../../../lib/chartTheme.js';
 
+const MAX_LABEL_CHARS = 22;
+
+function truncateLabel(value) {
+  const str = String(value);
+  return str.length > MAX_LABEL_CHARS ? `${str.slice(0, MAX_LABEL_CHARS - 1)}…` : str;
+}
+
 export default function RankedBarChart({ data, color = '#eb6834', height = 300 }) {
   if (!data || data.length === 0) return <EmptyChartState />;
   const sorted = [...data].sort((a, b) => b.value - a.value).slice(0, 12);
-  const rowHeight = 30;
+  const rowHeight = 32;
   const chartHeight = Math.max(height, sorted.length * rowHeight + 20);
 
   return (
     <ResponsiveContainer width="100%" height={chartHeight}>
-      <BarChart data={sorted} layout="vertical" margin={{ top: 4, right: 28, bottom: 4, left: 4 }} barCategoryGap={8}>
+      <BarChart data={sorted} layout="vertical" margin={{ top: 4, right: 28, bottom: 4, left: 4 }} barCategoryGap={10}>
         <CartesianGrid horizontal={false} stroke={INK.gridline} />
         <XAxis type="number" tick={{ fontSize: 11, fill: INK.muted }} axisLine={{ stroke: INK.baseline }} tickLine={false} allowDecimals={false} />
         <YAxis
           type="category"
           dataKey="name"
-          width={140}
+          width={150}
+          tickFormatter={truncateLabel}
+          interval={0}
           tick={{ fontSize: 11, fill: INK.secondary }}
           axisLine={{ stroke: INK.baseline }}
           tickLine={false}

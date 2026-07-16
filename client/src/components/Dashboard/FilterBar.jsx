@@ -2,12 +2,15 @@ import MultiSelectDropdown from './MultiSelectDropdown.jsx';
 
 const DIMENSIONS = [
   { key: 'years', label: 'Tahun Ajaran' },
+  { key: 'periodes', label: 'Periode' },
   { key: 'faculties', label: 'Fakultas' },
   { key: 'majors', label: 'Prodi' },
   { key: 'scopes', label: 'Scope' },
-  { key: 'categories', label: 'Kategori' },
-  { key: 'bentuks', label: 'Bentuk' },
-  { key: 'statuses', label: 'Status' },
+  { key: 'statuses', label: 'Tingkat Pencapaian' },
+  { key: 'categories', label: 'Tipe Kegiatan' },
+  { key: 'bentuks', label: 'Moda Pelaksanaan' },
+  { key: 'participants', label: 'Bentuk Partisipasi' },
+  { key: 'representations', label: 'Represent' },
   { key: 'cabangs', label: 'Cabang' },
   { key: 'kategoriSimkatmawas', label: 'Kategori Simkatmawa' },
 ];

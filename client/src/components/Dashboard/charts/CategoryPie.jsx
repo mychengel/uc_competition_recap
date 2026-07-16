@@ -4,8 +4,24 @@ import EmptyChartState from '../EmptyChartState.jsx';
 import { capTopN } from '../../../lib/chartData.js';
 import { SERIES, INK } from '../../../lib/chartTheme.js';
 
+const RADIAN = Math.PI / 180;
+
 function colorFor(capped, i) {
   return i === capped.length - 1 && capped[i].name === 'Lainnya' ? INK.baseline : SERIES[i % SERIES.length];
+}
+
+// Places the percent label at the mid-radius INSIDE the donut ring, so it
+// never overflows the chart bounds regardless of which slice is largest.
+function renderInsideLabel({ cx, cy, midAngle, innerRadius, outerRadius, percent }) {
+  if (percent < 0.08) return null;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" style={{ fontSize: 11, fontWeight: 700 }}>
+      {`${(percent * 100).toFixed(0)}%`}
+    </text>
+  );
 }
 
 export default function CategoryPie({ data, height = 260 }) {
@@ -16,7 +32,7 @@ export default function CategoryPie({ data, height = 260 }) {
   return (
     <div>
       <ResponsiveContainer width="100%" height={pieHeight}>
-        <PieChart>
+        <PieChart margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
           <Pie
             data={capped}
             dataKey="value"
@@ -24,12 +40,12 @@ export default function CategoryPie({ data, height = 260 }) {
             cx="50%"
             cy="50%"
             innerRadius="52%"
-            outerRadius="82%"
+            outerRadius="80%"
             paddingAngle={2}
             cornerRadius={4}
             isAnimationActive
             animationDuration={700}
-            label={({ percent }) => (percent >= 0.08 ? `${(percent * 100).toFixed(0)}%` : '')}
+            label={renderInsideLabel}
             labelLine={false}
           >
             {capped.map((_, i) => (

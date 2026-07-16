@@ -152,24 +152,30 @@ export default function DashboardPage() {
         </ChartCard>
       </div>
 
-      <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        <ChartCard title="Kategori Pencapaian" subtitle="Juara, finalis, dsb.">
-          <CategoryPie data={metrics.byCategory} height={240} />
+      <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ChartCard title="Tingkat Pencapaian" subtitle="Juara, finalis, peserta">
+          <CategoryPie data={metrics.byStatus} height={240} />
         </ChartCard>
-        <ChartCard title="Bentuk Kompetisi" subtitle="Individu vs. tim" delay={0.05}>
+        <ChartCard title="Bentuk Partisipasi" subtitle="Individu vs. tim" delay={0.05}>
+          <CategoryPie data={metrics.byParticipant} height={240} />
+        </ChartCard>
+        <ChartCard title="Moda Pelaksanaan" subtitle="Daring vs. luring" delay={0.1}>
           <CategoryPie data={metrics.byBentuk} height={240} />
         </ChartCard>
-        <ChartCard title="Status" subtitle="Status akhir prestasi" delay={0.1}>
-          <CategoryPie data={metrics.byStatus} height={240} />
+        <ChartCard title="Tipe Kegiatan" subtitle="Akademik vs. non akademik" delay={0.15}>
+          <CategoryPie data={metrics.byCategory} height={240} />
         </ChartCard>
       </div>
 
-      <div className="mt-5 grid gap-5 lg:grid-cols-2">
-        <ChartCard title="Penyelenggara Kompetisi Teratas" subtitle="Top 8 berdasarkan jumlah prestasi" delay={0.05}>
+      <div className="mt-5 grid gap-5 lg:grid-cols-3">
+        <ChartCard title="Penyelenggara Kompetisi Teratas" subtitle="Top 8 berdasarkan jumlah prestasi" delay={0.05} className="lg:col-span-1">
           <RankedBarChart data={metrics.byOrganizer} color="#4a3aa7" height={260} />
         </ChartCard>
         <ChartCard title="Kategori Simkatmawa" subtitle="Distribusi kategori pelaporan Simkatmawa" delay={0.1}>
           <CategoryPie data={metrics.byKategoriSimkatmawa} height={260} />
+        </ChartCard>
+        <ChartCard title="Represent" subtitle="Mahasiswa mewakili siapa saat berkompetisi" delay={0.15}>
+          <CategoryPie data={metrics.byRepresent} height={260} />
         </ChartCard>
       </div>
 

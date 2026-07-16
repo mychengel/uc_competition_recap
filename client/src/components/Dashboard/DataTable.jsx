@@ -3,14 +3,38 @@ import { useMemo, useState } from 'react';
 const COLUMNS = [
   { key: 'proposalNo', label: 'Proposal No', width: 'min-w-[110px]' },
   { key: 'year', label: 'TA', width: 'min-w-[70px]' },
+  { key: 'periode', label: 'Periode', width: 'min-w-[110px]' },
   { key: 'competitionName', label: 'Kompetisi', width: 'min-w-[220px]' },
   { key: 'majors', label: 'Prodi', width: 'min-w-[160px]', render: (a) => a.majors.join(', ') },
   { key: 'scope', label: 'Scope', width: 'min-w-[100px]' },
-  { key: 'category', label: 'Kategori', width: 'min-w-[130px]' },
-  { key: 'bentuk', label: 'Bentuk', width: 'min-w-[90px]' },
-  { key: 'status', label: 'Status', width: 'min-w-[100px]' },
+  { key: 'status', label: 'Tingkat Pencapaian', width: 'min-w-[140px]' },
+  { key: 'participant', label: 'Partisipasi', width: 'min-w-[90px]' },
+  { key: 'bentuk', label: 'Moda', width: 'min-w-[80px]' },
   { key: 'participantsCount', label: 'Peserta', width: 'min-w-[80px]', align: 'right' },
   { key: 'creditPoint', label: 'Credit Point', width: 'min-w-[100px]', align: 'right' },
+  {
+    key: 'certificateUrl',
+    label: 'Sertifikat',
+    width: 'min-w-[80px]',
+    sortable: false,
+    render: (a) =>
+      a.certificateUrl ? (
+        <a
+          href={a.certificateUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 font-semibold text-brand-600 hover:underline"
+        >
+          Lihat
+          <svg viewBox="0 0 12 12" fill="none" className="h-3 w-3">
+            <path d="M4 3h5v5M9 3 3 9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </a>
+      ) : (
+        <span className="text-[var(--text-muted)]">—</span>
+      ),
+  },
 ];
 
 const PAGE_SIZE = 10;
@@ -56,8 +80,8 @@ export default function DataTable({ achievements }) {
               {COLUMNS.map((col) => (
                 <th
                   key={col.key}
-                  onClick={() => toggleSort(col.key)}
-                  className={`cursor-pointer select-none whitespace-nowrap px-3 py-2.5 font-bold text-[var(--text-secondary)] ${col.width} ${col.align === 'right' ? 'text-right' : 'text-left'}`}
+                  onClick={() => col.sortable !== false && toggleSort(col.key)}
+                  className={`select-none whitespace-nowrap px-3 py-2.5 font-bold text-[var(--text-secondary)] ${col.sortable === false ? '' : 'cursor-pointer'} ${col.width} ${col.align === 'right' ? 'text-right' : 'text-left'}`}
                 >
                   <span className="inline-flex items-center gap-1">
                     {col.label}
