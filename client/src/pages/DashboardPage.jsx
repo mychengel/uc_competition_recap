@@ -21,6 +21,11 @@ import TrendLineChart from '../components/Dashboard/charts/TrendLineChart.jsx';
 import CreditBarChart from '../components/Dashboard/charts/CreditBarChart.jsx';
 import StackedYearBarChart from '../components/Dashboard/charts/StackedYearBarChart.jsx';
 import DimensionYearStackedBarChart from '../components/Dashboard/charts/DimensionYearStackedBarChart.jsx';
+import CrossTabTable from '../components/Dashboard/CrossTabTable.jsx';
+import AngkatanTrendTable from '../components/Dashboard/AngkatanTrendTable.jsx';
+import CollaborationTable from '../components/Dashboard/CollaborationTable.jsx';
+import TopStudentsTable from '../components/Dashboard/TopStudentsTable.jsx';
+import { orderedSegmentColorScale } from '../lib/chartTheme.js';
 
 function formatDate(iso) {
   try {
@@ -184,6 +189,78 @@ export default function DashboardPage() {
         <ChartCard title="Represent" subtitle="Mahasiswa mewakili siapa saat berkompetisi" delay={0.15}>
           <CategoryPie data={metrics.byRepresent} height={260} />
         </ChartCard>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--text-muted)]">Tren Angkatan Mahasiswa</h2>
+        <div className="grid gap-5 lg:grid-cols-2">
+          <ChartCard title="Tren Prestasi per Angkatan" subtitle="Gabungan seluruh mahasiswa, dari angkatan tertua ke termuda">
+            <TrendLineChart
+              data={metrics.byAngkatan}
+              lines={[
+                { dataKey: 'value', name: 'Prestasi' },
+                { dataKey: 'mahasiswa', name: 'Mahasiswa Terlibat' },
+              ]}
+            />
+          </ChartCard>
+          <ChartCard title="Rekap per Angkatan" subtitle="Total prestasi, mahasiswa, dan credit point" delay={0.05}>
+            <AngkatanTrendTable data={metrics.byAngkatan} />
+          </ChartCard>
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <ChartCard title="Prestasi per Program Studi berdasarkan Angkatan" subtitle="Top 12 prodi, komposisi angkatan mahasiswa yang terlibat" delay={0.1}>
+            <DimensionYearStackedBarChart
+              data={metrics.byMajorAngkatan}
+              segments={metrics.majorAngkatanSegments}
+              colorForSegment={orderedSegmentColorScale(metrics.majorAngkatanSegments)}
+            />
+          </ChartCard>
+          <ChartCard title="Prestasi per Fakultas berdasarkan Angkatan" subtitle="Komposisi angkatan mahasiswa yang terlibat" delay={0.15}>
+            <DimensionYearStackedBarChart
+              data={metrics.byFacultyAngkatan}
+              segments={metrics.facultyAngkatanSegments}
+              colorForSegment={orderedSegmentColorScale(metrics.facultyAngkatanSegments)}
+            />
+          </ChartCard>
+        </div>
+
+        <div className="mt-5 grid gap-5 lg:grid-cols-2">
+          <ChartCard title="Detail Prodi × Angkatan" subtitle="Jumlah prestasi tiap prodi per angkatan" delay={0.1}>
+            <CrossTabTable data={metrics.byMajorAngkatan} segments={metrics.majorAngkatanSegments} nameLabel="Prodi" />
+          </ChartCard>
+          <ChartCard title="Detail Fakultas × Angkatan" subtitle="Jumlah prestasi tiap fakultas per angkatan" delay={0.15}>
+            <CrossTabTable data={metrics.byFacultyAngkatan} segments={metrics.facultyAngkatanSegments} nameLabel="Fakultas" />
+          </ChartCard>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--text-muted)]">Kolaborasi Antar Program Studi</h2>
+        <p className="mb-3 -mt-1 text-xs text-[var(--text-muted)]">
+          Prestasi tim dengan anggota dari lebih dari satu prodi (Proposal No yang sama), dihitung 1x per kombinasi prodi per prestasi.
+        </p>
+        <ChartCard title="Kolaborasi Prodi Teratas" subtitle="Top 10 pasangan prodi berdasarkan jumlah prestasi tim lintas prodi">
+          <RankedBarChart
+            data={metrics.collaborations.map((c) => ({ name: c.name, value: c.count }))}
+            color="#4a3aa7"
+            height={280}
+          />
+        </ChartCard>
+        <div className="mt-5">
+          <ChartCard title="Detail Efektivitas Kolaborasi" subtitle="Total kolaborasi, jumlah juara, win rate, dan credit point per pasangan prodi" delay={0.05}>
+            <CollaborationTable data={metrics.collaborations} />
+          </ChartCard>
+        </div>
+      </div>
+
+      <div className="mt-8">
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wide text-[var(--text-muted)]">
+          Mahasiswa Berprestasi ({metrics.topStudents.length} mahasiswa)
+        </h2>
+        <div className="rounded-2xl border border-[var(--border-hairline)] bg-[var(--surface-card)] p-4 shadow-sm">
+          <TopStudentsTable students={metrics.topStudents} />
+        </div>
       </div>
 
       <div className="mt-8">

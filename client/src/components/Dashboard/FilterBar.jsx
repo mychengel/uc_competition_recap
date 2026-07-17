@@ -3,6 +3,7 @@ import MultiSelectDropdown from './MultiSelectDropdown.jsx';
 const DIMENSIONS = [
   { key: 'years', label: 'Tahun Ajaran' },
   { key: 'periodes', label: 'Periode' },
+  { key: 'angkatans', label: 'Angkatan' },
   { key: 'faculties', label: 'Fakultas' },
   { key: 'majors', label: 'Prodi' },
   { key: 'scopes', label: 'Scope' },
