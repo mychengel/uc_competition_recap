@@ -33,6 +33,24 @@ function isWinningStatus(status) {
   return /juara/i.test(status);
 }
 
+/** Derives the student's entry cohort ("angkatan") from their NIM.
+ *  Observed pattern in the institution's NIM (13 digits): characters 7-8
+ *  (0-indexed 6:8) are the 2-digit enrollment year, e.g. "...22..." -> 2022.
+ *  Returns null when the NIM doesn't match the expected shape, so callers
+ *  can exclude those rows from angkatan-based views instead of guessing. */
+export function deriveAngkatan(nim) {
+  const s = clean(nim);
+  if (s.length < 8) return null;
+  const yy = s.slice(6, 8);
+  if (!/^\d{2}$/.test(yy)) return null;
+  return `20${yy}`;
+}
+
+function pairKey(majors) {
+  // dedupe + stable order so "A x B" and "B x A" collapse into one key
+  return Array.from(new Set(majors)).sort((a, b) => a.localeCompare(b, 'id'));
+}
+
 /** Group raw rows into one record per achievement (year + Proposal No). */
 export function groupAchievements(rows) {
   const map = new Map();
@@ -48,12 +66,23 @@ export function groupAchievements(rows) {
         rows: [],
         majors: new Set(),
         faculties: new Set(),
+        angkatans: new Set(),
+        majorAngkatanPairs: new Set(),
+        facultyAngkatanPairs: new Set(),
       });
     }
     const group = map.get(key);
     group.rows.push(row);
-    group.majors.add(orLabel(row.major));
-    group.faculties.add(orLabel(row.faculty));
+    const major = orLabel(row.major);
+    const faculty = orLabel(row.faculty);
+    group.majors.add(major);
+    group.faculties.add(faculty);
+    const angkatan = deriveAngkatan(row.nim);
+    if (angkatan) {
+      group.angkatans.add(angkatan);
+      group.majorAngkatanPairs.add(`${major}||${angkatan}`);
+      group.facultyAngkatanPairs.add(`${faculty}||${angkatan}`);
+    }
   }
 
   return Array.from(map.values()).map((g) => {
@@ -67,6 +96,9 @@ export function groupAchievements(rows) {
       rows: g.rows,
       majors: Array.from(g.majors),
       faculties: Array.from(g.faculties),
+      angkatans: Array.from(g.angkatans),
+      majorAngkatanPairs: Array.from(g.majorAngkatanPairs),
+      facultyAngkatanPairs: Array.from(g.facultyAngkatanPairs),
       participantsCount: g.rows.length,
       nims: Array.from(new Set(g.rows.map((r) => clean(r.nim)).filter(Boolean))),
       competitionName: orLabel(first.competitionName),
@@ -93,6 +125,7 @@ export function groupAchievements(rows) {
 const FILTER_FIELDS = [
   { key: 'years', rowField: '_year' },
   { key: 'periodes', rowField: 'periode' },
+  { key: 'angkatans', getValue: (row) => (deriveAngkatan(row.nim) ? deriveAngkatan(row.nim) : UNKNOWN) },
   { key: 'faculties', rowField: 'faculty' },
   { key: 'majors', rowField: 'major' },
   { key: 'scopes', rowField: 'scope' },
@@ -105,6 +138,11 @@ const FILTER_FIELDS = [
   { key: 'kategoriSimkatmawas', rowField: 'kategoriSimkatmawa' },
 ];
 
+function fieldValue(f, row) {
+  if (f.getValue) return f.getValue(row);
+  return f.rowField === '_year' ? row._year : orLabel(row[f.rowField]);
+}
+
 export function emptyFilters() {
   return Object.fromEntries(FILTER_FIELDS.map((f) => [f.key, []]));
 }
@@ -113,8 +151,7 @@ export function buildFilterOptions(rows) {
   const sets = Object.fromEntries(FILTER_FIELDS.map((f) => [f.key, new Set()]));
   for (const row of rows) {
     for (const f of FILTER_FIELDS) {
-      const value = f.rowField === '_year' ? row._year : orLabel(row[f.rowField]);
-      sets[f.key].add(value);
+      sets[f.key].add(fieldValue(f, row));
     }
   }
   const options = {};
@@ -130,8 +167,7 @@ export function filterRows(rows, filters) {
     FILTER_FIELDS.every((f) => {
       const active = filters[f.key];
       if (!active || active.length === 0) return true;
-      const value = f.rowField === '_year' ? row._year : orLabel(row[f.rowField]);
-      return active.includes(value);
+      return active.includes(fieldValue(f, row));
     })
   );
 }
@@ -193,6 +229,120 @@ function buildDimensionYearBreakdown(achievements, dimensionKey, valueFn, topN =
   });
 }
 
+/** Cross-tab breakdown of a "name||segment" pair set attached to each
+ *  achievement (e.g. majorAngkatanPairs). Unlike the year breakdown, the
+ *  segment list isn't fixed in advance, so it's derived from the data and
+ *  returned alongside the rows (sorted ascending, e.g. oldest cohort first). */
+function buildCrossTabBreakdown(achievements, pairsKey, topN = 12) {
+  const byNameSegment = new Map();
+  const totals = new Map();
+  const segmentSet = new Set();
+
+  for (const a of achievements) {
+    for (const pair of a[pairsKey]) {
+      const [name, segment] = pair.split('||');
+      segmentSet.add(segment);
+      if (!byNameSegment.has(name)) byNameSegment.set(name, {});
+      const segMap = byNameSegment.get(name);
+      segMap[segment] = (segMap[segment] || 0) + 1;
+      totals.set(name, (totals.get(name) || 0) + 1);
+    }
+  }
+
+  const segments = Array.from(segmentSet).sort((a, b) => a.localeCompare(b, 'id'));
+  const names = Array.from(totals.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, topN)
+    .map(([name]) => name);
+
+  const data = names.map((name) => {
+    const segMap = byNameSegment.get(name) || {};
+    const row = { name };
+    for (const seg of segments) {
+      if (segMap[seg] !== undefined) row[seg] = segMap[seg];
+    }
+    row.total = totals.get(name) || 0;
+    return row;
+  });
+
+  return { data, segments };
+}
+
+/** Cross-prodi collaboration: for achievements with a mixed-major team,
+ *  tally every distinct major PAIR involved (once per achievement each),
+ *  plus how many of those wound up winning ("effective"). */
+function computeCollaborations(achievements) {
+  const map = new Map();
+  for (const a of achievements) {
+    if (a.majors.length < 2) continue;
+    const majors = pairKey(a.majors);
+    for (let i = 0; i < majors.length; i++) {
+      for (let j = i + 1; j < majors.length; j++) {
+        const key = `${majors[i]} × ${majors[j]}`;
+        if (!map.has(key)) {
+          map.set(key, { name: key, majorA: majors[i], majorB: majors[j], count: 0, juara: 0, creditPoints: 0 });
+        }
+        const c = map.get(key);
+        c.count += 1;
+        if (a.isWinner) c.juara += 1;
+        c.creditPoints += a.creditPoint;
+      }
+    }
+  }
+  return Array.from(map.values())
+    .map((c) => ({ ...c, winRate: c.count ? (c.juara / c.count) * 100 : 0 }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function scopeTier(scope) {
+  const s = scope.toLowerCase();
+  if (s.includes('international')) return 'international';
+  if (s.includes('national')) return 'national';
+  if (s.includes('regional')) return 'regional';
+  return null;
+}
+
+/** Per-student ranking: total unique achievements the student took part in,
+ *  broken down by how many of those wins were International/National/
+ *  Regional champion results. */
+function computeTopStudents(achievements) {
+  const map = new Map(); // nim -> student record
+  for (const a of achievements) {
+    const seenInAchievement = new Set();
+    for (const row of a.rows) {
+      const nim = clean(row.nim);
+      if (!nim || seenInAchievement.has(nim)) continue;
+      seenInAchievement.add(nim);
+      if (!map.has(nim)) {
+        map.set(nim, {
+          nim,
+          nama: orLabel(row.namaMahasiswa),
+          majors: new Set(),
+          faculties: new Set(),
+          angkatan: deriveAngkatan(nim) || UNKNOWN,
+          total: 0,
+          juaraInternational: 0,
+          juaraNational: 0,
+          juaraRegional: 0,
+        });
+      }
+      const s = map.get(nim);
+      s.majors.add(orLabel(row.major));
+      s.faculties.add(orLabel(row.faculty));
+      s.total += 1;
+      if (a.isWinner) {
+        const tier = scopeTier(a.scope);
+        if (tier === 'international') s.juaraInternational += 1;
+        else if (tier === 'national') s.juaraNational += 1;
+        else if (tier === 'regional') s.juaraRegional += 1;
+      }
+    }
+  }
+  return Array.from(map.values())
+    .map((s) => ({ ...s, majors: Array.from(s.majors), faculties: Array.from(s.faculties) }))
+    .sort((a, b) => b.total - a.total);
+}
+
 export function computeMetrics(filteredRows) {
   const achievements = groupAchievements(filteredRows);
 
@@ -246,6 +396,29 @@ export function computeMetrics(filteredRows) {
     .sort((a, b) => b.value - a.value)
     .slice(0, 8);
 
+  // Angkatan (student cohort) trend — combined across all students, ascending
+  // chronologically so the chart reads oldest -> newest cohort.
+  const angkatansPresent = Array.from(new Set(achievements.flatMap((a) => a.angkatans))).sort((a, b) =>
+    a.localeCompare(b, 'id')
+  );
+  const byAngkatan = angkatansPresent.map((angkatan) => {
+    const angkatanAchievements = achievements.filter((a) => a.angkatans.includes(angkatan));
+    return {
+      name: angkatan,
+      value: angkatanAchievements.length,
+      creditPoints: angkatanAchievements.reduce((s, a) => s + a.creditPoint, 0),
+      mahasiswa: new Set(
+        filteredRows.filter((r) => deriveAngkatan(r.nim) === angkatan).map((r) => clean(r.nim)).filter(Boolean)
+      ).size,
+    };
+  });
+
+  const majorAngkatan = buildCrossTabBreakdown(achievements, 'majorAngkatanPairs');
+  const facultyAngkatan = buildCrossTabBreakdown(achievements, 'facultyAngkatanPairs');
+
+  const collaborations = computeCollaborations(achievements);
+  const topStudents = computeTopStudents(achievements);
+
   return {
     achievements,
     totalPrestasi,
@@ -272,6 +445,13 @@ export function computeMetrics(filteredRows) {
     byCabang,
     byKategoriSimkatmawa,
     byOrganizer,
+    byAngkatan,
+    byMajorAngkatan: majorAngkatan.data,
+    majorAngkatanSegments: majorAngkatan.segments,
+    byFacultyAngkatan: facultyAngkatan.data,
+    facultyAngkatanSegments: facultyAngkatan.segments,
+    collaborations,
+    topStudents,
   };
 }
 
@@ -282,7 +462,7 @@ function pctChange(from, to) {
 
 export function computeInsights(metrics) {
   const insights = [];
-  const { byYear, byMajor, byFaculty, byScope, byStatus, byCategory, totalPrestasi, winRate, winningAchievements } =
+  const { byYear, byMajor, byFaculty, byScope, byStatus, byCategory, byAngkatan, totalPrestasi, winRate, winningAchievements } =
     metrics;
 
   if (byYear.length >= 2) {
@@ -375,6 +555,15 @@ export function computeInsights(metrics) {
       tone: 'default',
       title: `Tipe kegiatan dominan: ${top.name}`,
       detail: `${top.value} dari ${totalPrestasi} prestasi bertipe ${top.name}.`,
+    });
+  }
+
+  if (byAngkatan.length > 0) {
+    const topAngkatan = [...byAngkatan].sort((a, b) => b.value - a.value)[0];
+    insights.push({
+      tone: 'default',
+      title: `Angkatan paling aktif: ${topAngkatan.name}`,
+      detail: `Menyumbang ${topAngkatan.value} prestasi pada cakupan data yang dipilih.`,
     });
   }
 
